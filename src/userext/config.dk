@@ -1,0 +1,15 @@
+#include "dkli.dkh"
+#!
+module "config"
+{
+    // =============== GENERAL
+
+    // _STATIC
+    @JS_MAIN = "/$/dbext/js/main.js"
+    @JS_TUSERPRO = "/$/dbext/js/tuserpro.js"
+
+    // _PACKAGE
+    @DBEXT_TUSERPRO = "/!/dbext/tuserpro/"
+
+    @default_max_rows=250
+}

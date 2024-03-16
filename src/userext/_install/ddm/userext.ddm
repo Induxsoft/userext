@@ -1,0 +1,103 @@
+#include "ddm.dkh"
+model "Variables globales"
+{
+    #include "induxsoft.abstracts.ddm"
+
+    abstract "NmModel"
+    {
+        @"sys_pk" int key required autoincrement
+        @"sys_timestamp" datetime required
+        @"sys_recver" int
+        @"sys_deleted" bool
+        @"sys_lock" int
+    }
+
+    entity "tuserpro": "TableModel"
+    {
+        @"ref_user" ref:"tuser" unique required
+        @"email" string(255) unique required
+        @"mobile" string(15) unique required
+    }
+    entity "tuser"
+    {
+        @"sys_pk" int key required autoincrement
+        @"sys_guid" string(32) unique required
+        @"sys_dtcreated" datetime
+        @"sys_timestamp" datetime required
+        @"sys_info" string(32)
+        @"sys_user" string(32)
+        @"sys_lastuser" string(32)
+        @"sys_exported" bool
+        @"sys_dtexported" datetime
+        @"sys_recver" int
+        @"sys_deleted" bool
+        @"sys_lock" int
+
+        @"locked" bool 
+        @"message" string(255) 
+        @"notes" memo 
+        @"pwd" string(32) 
+        @"userid" string(120) unique required
+        @"username" string(120) required
+        @"pwdmd5" string(64) 
+    }
+
+    // Información de la aplicación
+    entity "sys_app_catalog"
+    {
+        @"pack_id" string(32) required
+        @"app_id" string(32) key
+        @"app_title" string(255)
+        @"created" datetime required
+        @"app_info" mmemo
+    }
+    // Categoria de la aplicación
+    entity "sys_app_category"
+    {
+        @"id" string(32) key
+        @"title" string(255) required
+    }
+    // Recursos de la aplicación
+    entity "sys_app_shortcut" 
+    {
+        @"id" string(32) key
+        @"title" string(255) required
+        @"icon96x96" string(1024) required
+        @"src" string(1024) required //cambiar a href
+        @"_blank" bool
+        @"appid" ref : "sys_app_catalog"
+        @"cat" ref :"sys_app_category"
+    }
+
+    entity "sys_app_item_action"
+    {
+        @"id" string(32) key
+        @"title" string(255) required
+        @"shorttitle" string(25) 
+        @"icon16x16" string(1024) required
+        @"href" string(1024) required
+        @"_blank" bool
+        @"appid" ref : "sys_app_catalog"
+        @"itemtype" ref : "sys_app_item_type"
+        @"req_context_item_id" bool
+        @"act_type" string(15) //Cadena con el tipo de acción: 'action' o 'report'
+    }
+
+    entity "sys_app_item_type"
+    {
+        @"id" string(32) key
+        @"title" string(255) required
+    }
+
+    // entity "sys_group_app_shortcut"
+    // {
+    //     @"shortcut" ref:"sys_app_shortcut" required
+    //     @"usergroup" ref: "usergroup" required
+
+    //     index "sys_group_app_shortcut_idx1" unique
+    //     {
+    //         field "shortcut"
+    //         field "usergroup"
+    //     }
+    // }
+}
