@@ -18,16 +18,29 @@ module "list"
     new table_definition
     {
         @"datatable*": usuarios
-        @"table_footer": "Mostrando los primeros # usuarios ordenadas por código"
+        @"table_footer": "Mostrando los primeros # usuarios ordenados por nombre"
         member @"columns"
         {
-
+            member @"username" { @"caption":"Nombre" }
+            member @"email" { @"caption":"Correo" }
+            member @"mobile" { @"caption":"Teléfono" }
+            member @"_actions" 
+            { 
+                @"caption":"Acciones" 
+                @"template":ftext('
+                    <div style="display:flex;gap:8px;justify-content:center;width:100%;" class="no-print">
+                        <a href="#<@USEREXT_TUSERPRO>${DataRow.sys_pk}/" style="cursor:pointer; text-decoration: none; padding: 0px 8px; background-color: #F5F5F5; color: #000;">Editar</a>
+                        <button onclick="InduxsoftCrudlModel.Delete(${DataRow.sys_pk})" style="cursor:pointer; border: none; outline: none; padding: 0px 8px; background-color: #F5F5F5; color: #000;">Eliminar</button>
+                    </div>
+                ')
+                @"no-print":@true
+            }
         }
     }
 
     header_act::
     { 
-        #$ a(href="#<@DBEXT_TUSERPRO>_new/" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print"){$"Agregar"}
+        #$ a(href="#<@USEREXT_TUSERPRO>_new/" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print"){$"Agregar"}
     }
 
     #! point general_act to header_act
@@ -39,6 +52,7 @@ module "list"
         @"urlexit": "/"
         @"actions*": dbr.apps.itemactions(@('&database'),"userpro","action","",0)
         @"reports*": dbr.apps.itemactions(@('&database'),"userpro","report","",0)
+        @"jscurrentcontext": "getCurrentContext"
     }
     
     #$
@@ -46,14 +60,14 @@ module "list"
     {
         #! do uie.printV12FormBar(nav_config)
 
-        #$ div(id="work_area" class="container-section pt-2")
+        #$ div(id="work_area" class="container-section p-2")
         {
             form(action="./" method="GET" id="form_search" class="no-print my-1 d-flex py-1")
             {
                 "filter-text"(
                     "id"="ft_search"
                     "text-field"="s"
-                    "placeholder"="Buscar"
+                    "placeholder"="Buscar por nombre, correo o teléfono"
                     "form"="#form_search"
                     "value"="#<@@(@@(@crud_context,'&http/request/get'),'$s')>"
                     "auto-submit"="true"
@@ -62,9 +76,13 @@ module "list"
             }
             #! do uie.dbeditable(table_definition, "tbl_linea_recetas")
         }
-        #$ div(id="status_bar" class="container-section")
-        {
-            $""
-        }
+        #$ script{$'
+            function getCurrentContext()
+            {
+                const table = document.querySelector("#tbl_linea_recetas");
+                const id = (table?.DataArray[table.CurrentRowIndex()]?.sys_pk ?? "");
+                return { item_id:id, context: {} }
+            }
+        '}
     }
 }

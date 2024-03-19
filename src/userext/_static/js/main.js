@@ -1,7 +1,7 @@
 var main = {
     init()
     {
-        
+        this.setValidationInputNumberMaxLength();
     },
     url_encode(url)
     {
@@ -100,6 +100,18 @@ var main = {
         keys.forEach(key => elem.setAttribute(key, attributes[key]));
         if (innerHTML) elem.innerHTML = innerHTML;
         return elem;
+    },
+    setValidationInputNumberMaxLength()
+    {
+        const lengthCheck = input => {
+            if (input.value.length > input.max.length) input.value = input.value.slice(0, input.max.length);
+        }
+
+        const iptNumbers = document.querySelectorAll('input[type="number"]');
+        
+        iptNumbers.forEach(ipt => {
+            if (ipt.hasAttribute('max')) ipt.addEventListener('input', () => lengthCheck(ipt));
+        });
     }
 }
 window.addEventListener('DOMContentLoaded', () => {

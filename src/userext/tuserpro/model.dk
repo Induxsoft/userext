@@ -5,35 +5,60 @@ module "model"
     #include "../config.dk"
     #include "../_lib/lib.dk"
 
-    @table_name = "tuserpropro"
+    @table_name = "tuserpro"
 
     function tuserpro_create(&db,&params,&data)
     {
         @use_transaction = @false
         ref groups = @null
 
+        new user
+        {
+            @"sys_pk": @@(data,"#u_sys_pk")
+            @"sys_recver": @@(data,"#u_sys_recver")
+        }
+        if field.exist(data,"notes"){ user<"notes">: @@(data,"$notes") }
+        if field.exist(data,"username"){ user<"username">: @@(data,"$username") }
+        if field.exist(data,"pwd")
+        {
+            user<"pwd">:toupper(md5e(@@(data,"pwd"),"Unicode"))
+            user<"pwdmd5">:toupper(md5(@@(data,"pwd")))
+        }
+
+        new userpro
+        {
+            @"sys_pk": @@(data,"#sys_pk")
+            @"sys_recver": @@(data,"#sys_recver")
+        }
+        if field.exist(data,"email"){ userpro<"email">: @@(data,"$email") }
+        if field.exist(data,"mobile"){ userpro<"mobile">: @@(data,"$mobile") }
+
         if field.exist(data,"groups")
         {
             ref groups = from.json(@@(data,"$groups"))
-            do field.remove(data, "groups")
         }
-        if field.exist(data,"pwd")
+
+        if @@(params,"_entity_id") == "_new"
         {
-            data<"pwd">:toupper(md5e(@@(data,"pwd"), "Unicode"))
-            data<"pwdmd5">:toupper(md5(@@(data,"pwd")))
+            user<"userid">: toupper(uuid())
+            user<"external">: @true
         }
 
         do dbr.begin(db)
-        ref res = record.caseinsensitive(entity.create(db,params,data))
-        if not(isnull(groups)) && list.count(groups) > 0 { do tuserpro_add_to_groups(db, groups, @@(res,"#sys_pk")) }
+        ref res_user = dbr.save(db,"tuser",user)
+        userpro<"ref_user">: @@(res_user,"#sys_pk")
+        ref res_userpro = dbr.save(db,"tuserpro",userpro)
+        if not(isnull(groups)){ do tuserpro_add_to_groups(db, groups, @@(res_user,"#sys_pk")) }
         do dbr.commit(db)
 
-        return res
+        new prm{ @"_entity_id": @@(res_userpro,"sys_pk") }
+        return tuserpro_read(db, prm)
 
         exception
         {
             if dbr.in_transaction(db) { do dbr.rollback(db) }
             do cu_error("usuario")
+            data<"groups*">: get_user_groups(db, @@(data, "#u_sys_pk"))
             do rise_error(500, last_error())
         }
     }
@@ -67,11 +92,18 @@ module "model"
 
     function tuserpro_read(&db, &params)
     {
-        ref res = entity.read(db, params)
-        if not(isnull(res)) 
-        {
-            ref res = record.caseinsensitive(res)
-            res<"groups*">: get_user_groups(db, @@(res, "#sys_pk"))
+        sql = "
+            SELECT up.sys_pk, IFNULL(up.sys_recver,0) sys_recver, up.email, up.mobile, 
+                u.sys_pk u_sys_pk, IFNULL(u.sys_recver,0) u_sys_recver, u.username, IFNULL(u.notes,'') notes
+            FROM tuserpro up
+                INNER JOIN tuser u ON up.ref_user = u.sys_pk
+            WHERE up.sys_pk=@_entity_id
+                AND IFNULL(u.external,0) = 1
+            LIMIT 1;
+        "
+        ref res = dbr.rec(db, sql, params)
+        if not(isnull(res)) {
+            res<"groups*">: get_user_groups(db, @@(res, "#u_sys_pk"))
         }
         return res
     }
@@ -109,9 +141,14 @@ module "model"
         @use_transaction = @false
 
         do dbr.begin(db)
-        do dbr.execute(db, "DELETE FROM user_usergroup_ WHERE users=@_entity_id;", params)
-        do dbr.execute(db, "DELETE FROM uservar WHERE fuser=@_entity_id;", params)
-        do entity.delete(db, params)
+        ref user = dbr.rec(db,"SELECT ref_user user_pk FROM tuserpro WHERE sys_pk=@_entity_id LIMIT 1;",params)
+        if not(isnull(user))
+        {
+            do dbr.execute(db, "DELETE FROM user_usergroup_ WHERE users=@user_pk;", user)
+            do dbr.execute(db, "DELETE FROM uservar WHERE fuser=@user_pk;", user)
+            do entity.delete(db, params)
+            do dbr.execute(db, "DELETE FROM tuser WHERE sys_pk=@user_pk;", user)
+        }
         do dbr.commit(db)
 
         return @true
@@ -125,18 +162,26 @@ module "model"
 
     function list(&db, &params)
     {
-        query="SELECT sys_pk, userid, username
-            FROM tuserpro
-            WHERE IF(IFNULL(@s,'')='', true, (userid LIKE CONCAT('%',@s,'%') OR username LIKE CONCAT('%',@s,'%')))
-            ORDER BY userid
-            LIMIT #<@default_max_rows>;"
-        return dbr.list(db, ftext(query), params)
+        sql = "
+            SELECT
+                up.sys_pk, up.email, up.mobile, u.username
+            FROM tuserpro up
+                INNER JOIN tuser u ON up.ref_user = u.sys_pk
+            WHERE IF(IFNULL(@s,'')='', true, (up.email LIKE CONCAT('%',@s,'%') OR up.mobile LIKE CONCAT('%',@s,'%') OR u.username LIKE CONCAT('%',@s,'%')))
+                AND IFNULL(u.external,0) = 1
+            ORDER BY u.username
+            LIMIT #<@default_max_rows>;
+        "
+
+        return dbr.list(db, ftext(sql), params)
     }
 
     function cu_error(table)
     {
         new fields {
-            @"userid": "El nombre de inicio de sesión"
+            @"userid": "El nombre"
+            @"email": "El correo"
+            @"mobile": "El teléfono"
         }
         do valide_duplicate(fields, table, last_error(), last_error_code())
     }

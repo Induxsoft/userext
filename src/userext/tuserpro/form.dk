@@ -4,7 +4,9 @@ module "form.dk"
 {
     #include "functions.dkh"
     #include "serialize.dkh"
+    #include "uielements.v12.dkl"
     #include "../config.dk"
+    #include "../_lib/icons.dk"
 
     do @context.begin(@crud_context)
 
@@ -13,7 +15,7 @@ module "form.dk"
     entity_id = @("$parameters/_entity_id")
     error = @("$error/message")
     isNew = (entity_id == "_new")
-    action = replace(@DBEXT_ADD_EDIT_TUSER, "@id", entity_id)
+    action = @USEREXT_TUSERPRO+entity_id+"/"
 
     function get_checklist_data(&groups)
     {
@@ -41,38 +43,38 @@ module "form.dk"
         return data
     }
 
+    header_act::
+    { 
+        #$ button(type="submit" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print"){$"#<@ICON_SAVE>"}
+    }
+
+    #! point general_act to header_act
+
+    new nav_config
+    {
+        @"title": ftext("#<ifstr(isNew,'Agregar','Editar')> usuario")
+        @"buttons*": general_act
+        @"urlexit": @USEREXT_TUSERPRO
+        member @"hidden" { @"print": @true }
+    }
+
     #$
     div(class="container")
     {   
         form(method="POST" action="#<action>" id="form")
         {
-            div(id="main_bar" class="row container-section my-2 px-0 py-2 border-bottom")
-            {
-                div(class="col-4 d-flex align-items-center p-0")
-                {
-                    h5(class="tex-no-break m-0"){$"#<ifstr(isNew,'Agregar','Editar')> usuario"}
-                }
-                div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2")
-                {
-                    a(href="./" class="btn btn-sm border-secondary induxsoft-corners btn-main-action" title="Refrescar"){$"#<@@(@icons,'ARROW_CLOCKWISE')>"}
-                    button(type="submit" class="btn btn-sm border-secondary induxsoft-corners btn-main-action"){
-                        $'#<@@(@icons,"save2")>'
-                    }
-                    a(class="btn btn-sm border-secondary induxsoft-corners btn-main-action" href="#<@DBEXT_TUSER>") {
-                        svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16") {
-                            path(d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z")
-                        }
-                    }
-                }
-            }
-            div(id="work_area" class="container-section")
+            #! do uie.printV12FormBar(nav_config)
+
+            #$ div(id="work_area" class="container-section")
             {
                 div(class="#<ifstr(@('error/message')!='','alert alert-danger','')>"){$"#<@('error/message')>"}
 
                 input(type="hidden" name="sys_pk" value="#<@@(user, '#sys_pk')>")
-                input(type="hidden" name="sys_recver" value="#<@@(user, '#sys_recver')>")
+                input(type="hidden" name="sys_recver" id="ipt_sys_recver" value="#<@@(user, '#sys_recver')>")
+                input(type="hidden" name="u_sys_pk" value="#<@@(user, '#u_sys_pk')>")
+                input(type="hidden" name="u_sys_recver" id="ipt_u_sys_recver" value="#<@@(user, '#u_sys_recver')>")
                 input(type="hidden" name="locked" value="0")
-                input(type="hidden" name="groups" value="0" id="inputGroups")
+                input(type="hidden" name="groups" value="" id="inputGroups")
 
                 // NAV TABS
                 ul(class="nav nav-tabs mt-3" id="myTab" role="tablist")
@@ -92,14 +94,19 @@ module "form.dk"
                     {
                         div(class="row mb-2 mt-4")
                         {
-                            div(class="col-sm-6")
+                            div(class="col-sm-4")
                             {
-                                small(class="fw-bold"){$"Nombre de inicio de sesión:"}
-                                input(type="text" class="induxsoft-form-control mb-2" name="userid" value="#<@@(user, '$userid')>" required="true" maxlength="120")
+                                small(class="fw-bold"){$"Correo:"}
+                                input(type="email" class="induxsoft-form-control mb-2" name="email" value="#<@@(user, '$email')>" required="true" maxlength="255")
                             }
-                            div(class="col-sm-6")
+                            div(class="col-sm-4")
                             {
-                                small(class="fw-bold"){$"Nombre propio del usuario:"}
+                                small(class="fw-bold"){$"Teléfono:"}
+                                input(type="number" class="induxsoft-form-control mb-2" name="mobile" value="#<@@(user, '$mobile')>" required="true" step="1" max="999999999999999")
+                            }
+                            div(class="col-sm-4")
+                            {
+                                small(class="fw-bold"){$"Nombre:"}
                                 input(type="text" class="induxsoft-form-control mb-2" name="username" value="#<@@(user, '$username')>" required="true" maxlength="120")
                             }
                         }
@@ -165,8 +172,10 @@ module "form.dk"
                         }
                         div(class="modal-body p-4 bg-white" id="mdl_cpwd_controls")
                         {
-                            input(type="hidden" name="sys_pk" value="#<@@(user, '#sys_pk')>")
-                            input(type="hidden" name="sys_recver" value="#<@@(user, '#sys_recver')>")
+                            input(type="hidden" name="sys_pk" value="#<@@(user,'#sys_pk')>")
+                            input(type="hidden" name="sys_recver" value="#<@@(user,'#sys_recver')>")
+                            input(type="hidden" name="u_sys_pk" value="#<@@(user,'#u_sys_pk')>")
+                            input(type="hidden" name="u_sys_recver" value="#<@@(user,'#u_sys_recver')>")
 
                             small{$"Nueva contraseña:"}
                             input(type="password" class="induxsoft-form-control mb-2" id="pwd2" name="pwd")
@@ -177,7 +186,7 @@ module "form.dk"
                         }
                         div(class="modal-footer")
                         {
-                            button(type="button" class="btn btn-sm btn-primary" onclick="tuser.changePwd()"){$"Aceptar"}
+                            button(type="button" class="btn btn-sm btn-primary" onclick="tuserpro.changePwd()"){$"Aceptar"}
                             button(type="button" class="btn btn-sm btn-light" "data-bs-dismiss"="modal"){$"Cancelar"}
                         }
                     }
@@ -185,12 +194,11 @@ module "form.dk"
             }
         }
 
-        script(src="#<@JS_TUSER>"){$""}
+        script(src="#<@JS_TUSERPRO>"){$""}
         script(src="#<@JS_MAIN>"){$""}
         script{$'
-            tuser.user = #<to.json(user)>;
-            tuser.url = "#<@DBEXT_ADD_EDIT_TUSER>";
-            console.log(#<to.json(user)>);
+            tuserpro.user = #<to.json(user)>;
+            tuserpro.url = "#<@USEREXT_TUSERPRO>";
         '}
     }
 }

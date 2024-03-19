@@ -1,4 +1,4 @@
-var tuserpropro = 
+var tuserpro = 
 {
     user:null, url:'',
     init()
@@ -31,7 +31,7 @@ var tuserpropro =
 
         delete values.pwd_confirm;
 
-        let endpoint = this.url.replace('@id', this.user.sys_pk);
+        let endpoint = this.url + this.user.sys_pk.toString() + '/';
 
         InduxsoftCrudlModel.InvokeService(endpoint, values, 
             success => { 
@@ -65,10 +65,12 @@ var tuserpropro =
             if (data) input_groups.value = JSON.stringify(data.items.filter(d=>d.done).map(d=>{return d.id}));
         }
     },
-    changeSysRecver(userData)
+    changeSysRecver(data)
     {
-        const inputRecVer = document.querySelector('#form input[name="sys_recver"]');
-        if (inputRecVer) inputRecVer.value = userData.sys_recver;
+        const usrrecver = document.querySelector('#ipt_u_sys_recver');
+        const prorecvar = document.querySelector('#ipt_sys_recver');
+        if (usrrecver) usrrecver.value = data.u_sys_recver;
+        if (prorecvar) prorecvar.value = data.sys_recver;
     }
 }
 
