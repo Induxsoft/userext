@@ -1,4 +1,4 @@
 "id","title","shorttitle","icon16x16","href","_blank","appid","itemtype","req_context_item_id","act_type"
-"XU11","Agregar Usuario","Agregar","","/!/userext/tuserpro/_new/","0","userext.tuserpro","userpro","0","action"
-"XU12","Editar Usuario","Editar","","/!/userext/tuserpro/@_src_context_item_id/","0","userext.tuserpro","userpro","1","action"
-"XU13","Eliminar Usuario","Eliminar","","javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);","0","userext.tuserpro","userpro","1","action"
+"XU11","Agregar Usuario","Agregar","","/!/userext/tuserpro/_new/","0","userext.tuserpro","DET062","0","action"
+"XU12","Editar Usuario","Editar","","/!/userext/tuserpro/@_src_context_item_id/","0","userext.tuserpro","DET062","1","action"
+"XU13","Eliminar Usuario","Eliminar","","javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);","0","userext.tuserpro","DET062","1","action"
