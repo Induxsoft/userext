@@ -42,7 +42,62 @@ model "Variables globales"
         @"pwdmd5" string(64) 
         @"external" bool    //Si es true, el usuario se consiera externo
     }
-
+    // Tipo (clasificación) del cliente
+    entity "tipocliente" : "TableModel"
+    {
+        @"codigo" string(15) unique required
+        @"descripcion" string(50) unique required
+        @"notas" string(4096) 
+    }
+    entity "divisa" : "TableModel"
+    {
+        @"codigo" string(5) unique required
+        @"descripcion" string(30) unique required
+        @"tcambio" decimal(18,8)
+    }
+    entity "cliente": "TableModel" 
+    { 
+        @"codigo" string(35) unique required
+        @"nombre" string(150) unique required
+        @"idivisa" ref:"divisa" required
+        @"tipo" ref:"tipocliente" required
+    }
+    entity "usrcli":"TableModel" //Representa la unión entre un usuario y un cliente
+    {
+        @"cliente" ref: "cliente" required
+        @"usuario" ref: "tuser" required
+        @"host" string(128) required // Nombre del host en el que representa al cliente (si es * es válido en cualquier sitio)
+        
+        index "usrcli_uniq1" unique
+        {
+            field "cliente"
+            field "usuario"
+            field "host"
+        }
+        index "idxhost" 
+        {
+            field "host"
+        }
+        index "idxusuario" 
+        {
+            field "usuario"
+        }
+        index "idxcliente" 
+        {
+            field "cliente"
+        }
+    }
+    entity "clientsecret":"TableModel" //Representa un valor 'secreto' asociado a un cliente usado para relacionar un usuario a un cliente y host en particular
+    {
+        @"cliente" ref: "cliente" required
+        @"host" string(128) required // Nombre del host en el que representa al cliente (si es * es válido en cualquier sitio)
+        @"secret" string(15) required //Valor secreto
+        index "usrcli_uniq1" unique
+        {
+            field "cliente"
+            field "host"
+        }
+    }
     // Información de la aplicación
     entity "sys_app_catalog"
     {

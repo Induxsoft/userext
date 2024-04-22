@@ -1,0 +1,49 @@
+#include "dkli.dkh"
+#!
+module "model"
+{
+    @list_query="SELECT uc.sys_pk,tu.email,tu.mobile,uc.host,c.nombre
+    FROM usrcli uc
+    INNER JOIN cliente c ON uc.cliente=c.sys_pk
+    INNER JOIN tuserpro tu ON uc.usuario=tu.sys_pk
+    WHERE c.sys_pk=@parent
+    having if(ifnull(@s,'')='',true,concat_ws('',nombre,email,mobile) like concat('%',@s,'%') )"
+
+    @table_name = "usrcli"
+
+    prepareView::&db,&params,&entity
+    {
+        params<"user">:@@(entity,"#usuario")
+        ref user=dbr.rec(db,"select tp.*,t.userid username 
+        from tuserpro  tp
+        inner join tuser t on tp.ref_user=t.sys_pk 
+        where tp.sys_pk=@user",params)
+        
+        using entity
+        {
+            @"user*":ifnull(user,record.create())
+        }
+    }
+
+    read::&db,&params
+    {
+        ref entity= entity.read(db,params)
+        do prepareView(db,params,entity)
+       return entity
+    }
+    save::&db,&params,&data
+    {
+        ref entity=@null
+    
+        if @@(params,"$_entity_id")!="_new"{ref entity= entity.update(db,params,data)} 
+        else{ref entity=entity.create(db,params,data)}
+
+        @url_redir=preserveQSParams(@USEREXT_USERCLIENT)
+
+        return entity
+    }
+    
+    point @create to save
+    point @update to save
+    point @read to read
+}

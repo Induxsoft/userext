@@ -2,3 +2,5 @@
 "XU11","Agregar Usuario","Agregar","","/!/userext/tuserpro/_new/","0","userext.tuserpro","DET062","0","action"
 "XU12","Editar Usuario","Editar","","/!/userext/tuserpro/@_src_context_item_id/","0","userext.tuserpro","DET062","1","action"
 "XU13","Eliminar Usuario","Eliminar","","javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);","0","userext.tuserpro","DET062","1","action"
+"XU21","Administrar usuarios","Usuarios","","/!/userext/usrclient/","0","userext.usrclient","DET06E","0","action"
+"XU22","Administrar secretos de cliente","Secretos","","/!/userext/secrets/","0","userext.secrets","DET06F","0","action"

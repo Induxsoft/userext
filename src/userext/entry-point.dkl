@@ -21,6 +21,8 @@ module "Controller configs"
 	//No modifique a menos que sepa lo que está haciendo
 	do crudl.routes.pattern("/_program/")
 	do crudl.routes.entity("/tuserpro/","tuserpro")
+	do crudl.routes.entity("/usrclient/","usrclient")
+	do crudl.routes.entity("/secrets/","secrets")
 
 	@dbmvc_path="crudl/"
 	

@@ -1,0 +1,98 @@
+#include "dkli.dkh"
+#!
+module "list"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "../config.dk"
+    #include "dbr.dkh"
+    #include "dbr.apps.dkl"
+    #include "uielements.v12.dkl"
+
+    do @context.begin(@crud_context)
+    ref @http_context=@("&http")
+    ref usuarios = @("&./")
+    @cliente=@("#parameters/parent")
+    
+    url_edit=preserveQSParams(replace(@USEREXT_USERCLIENT_ADD_EDIT,"{id}","${DataRow.sys_pk}"))
+    new table_definition
+    {
+        @"datatable*": usuarios
+        @"table_footer": "Mostrando los primeros # usuarios ordenados por nombre"
+        member @"columns"
+        {
+            member @"nombre" { @"caption":"Nombre" }
+            member @"email" { @"caption":"Correo" }
+            member @"mobile" { @"caption":"Teléfono" }
+            member @"_actions" 
+            { 
+                @"caption":"Acciones" 
+                @"template":ftext('
+                    <div style="display:flex;gap:8px;justify-content:center;width:100%;" class="no-print">
+                        <a href="#<url_edit>" style="cursor:pointer; text-decoration: none; padding: 0px 8px; background-color: #F5F5F5; color: #000;">Editar</a>
+                        <button onclick="InduxsoftCrudlModel.Delete(${DataRow.sys_pk})" style="cursor:pointer; border: none; outline: none; padding: 0px 8px; background-color: #F5F5F5; color: #000;">Eliminar</button>
+                    </div>
+                ')
+                @"no-print":@true
+            }
+        }
+    }
+
+    header_act::
+    { 
+        url=preserveQSParams(replace(@USEREXT_USERCLIENT_ADD_EDIT,"{id}","_new"))
+        #$ a(href="#<url>" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print"){$"Agregar"}
+    }
+
+    #! point general_act to header_act
+
+    ref urls_actions=dbr.apps.itemactions(@('&database'),"DET06E","action","",0)
+    for i = 0; i < @count(urls_actions)
+    {
+        ref url_act=@item(urls_actions,i)
+        if tolower(@@(url_act,"$shorttitle"))=="usuarios"{url_act<"href">:preserveQSParams(@@(url_act,"$href"))}
+    }
+    
+    new nav_config
+    {
+        @"title": "Administrar de usuarios"
+        @"buttons*": general_act
+        @"urlexit": "/"
+        @"actions*": urls_actions
+        // @"reports*": dbr.apps.itemactions(@('&database'),"DET06E","report","",0)
+        @"jscurrentcontext": "getCurrentContext"
+    }
+    
+    #$
+    div(class="container-fluid p-0")
+    {
+        #! do uie.printV12FormBar(nav_config)
+
+        #$ div(id="work_area" class="container-section p-2")
+        {$""
+            form(action="#<preserveQSParams('./')>" method="GET" id="form_search" class="no-print my-1 d-flex py-1")
+            {
+                "filter-text"(
+                    "id"="ft_search"
+                    "text-field"="s"
+                    "placeholder"="Buscar por nombre, correo o teléfono"
+                    "form"="#form_search"
+                    "value"="#<@@(@@(@crud_context,'&http/request/get'),'$s')>"
+                    "auto-submit"="true"
+                    "class"="w-100"
+                ){$""}
+
+                input(type="hidden" class="induxsoft-form-control" id="parent" name="parent" value="#<@('$parameters/parent')>")
+            }
+            #! do uie.dbeditable(table_definition, "tbl_linea_recetas")
+        }
+        #$ script{$'
+            function getCurrentContext()
+            {
+                const table = document.querySelector("#tbl_linea_recetas");
+                const id = (table?.DataArray[table.CurrentRowIndex()]?.sys_pk ?? "");
+                return { item_id:id, context: {} }
+            }
+        '}
+    }
+}
