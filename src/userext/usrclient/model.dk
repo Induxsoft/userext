@@ -2,12 +2,14 @@
 #!
 module "model"
 {
-    @list_query="SELECT uc.sys_pk,tu.email,tu.mobile,uc.host,c.nombre
+    @list_query="SELECT uc.sys_pk,tu.email,tu.mobile,uc.host,t.username nombre
     FROM usrcli uc
     INNER JOIN cliente c ON uc.cliente=c.sys_pk
     INNER JOIN tuserpro tu ON uc.usuario=tu.sys_pk
+    inner join tuser t on tu.ref_user=t.sys_pk 
     WHERE c.sys_pk=@parent
-    having if(ifnull(@s,'')='',true,concat_ws('',nombre,email,mobile) like concat('%',@s,'%') )"
+    having if(ifnull(@s,'')='',true,concat_ws('',nombre,email,mobile) like concat('%',@s,'%') )
+    order by uc.sys_pk desc"
 
     @table_name = "usrcli"
 
@@ -22,6 +24,7 @@ module "model"
         using entity
         {
             @"user*":ifnull(user,record.create())
+            @"cliente*":dbr.rec(db,"select * from cliente c where sys_pk=@parent",params)
         }
     }
 
@@ -42,7 +45,17 @@ module "model"
 
         return entity
     }
+    list::&db,&params
+    {
+        new entity
+        {
+            @"data*":entity.list(db,params)
+        }
+        do prepareView(db,params,entity)
+       return entity
+    }
     
+    point @list to list
     point @create to save
     point @update to save
     point @read to read

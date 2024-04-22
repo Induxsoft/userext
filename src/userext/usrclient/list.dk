@@ -11,14 +11,16 @@ module "list"
 
     do @context.begin(@crud_context)
     ref @http_context=@("&http")
-    ref usuarios = @("&./")
+    ref datos = @("&./data")
     @cliente=@("#parameters/parent")
+
+    ref cliente=@("&./cliente")
     
     url_edit=preserveQSParams(replace(@USEREXT_USERCLIENT_ADD_EDIT,"{id}","${DataRow.sys_pk}"))
     new table_definition
     {
-        @"datatable*": usuarios
-        @"table_footer": "Mostrando los primeros # usuarios ordenados por nombre"
+        @"datatable*": datos
+        @"table_footer": "Mostrando los primeros # fila(s)"
         member @"columns"
         {
             member @"nombre" { @"caption":"Nombre" }
@@ -55,7 +57,7 @@ module "list"
     
     new nav_config
     {
-        @"title": "Administrar de usuarios"
+        @"title": "Administración de usuarios"
         @"buttons*": general_act
         @"urlexit": "/"
         @"actions*": urls_actions
@@ -67,7 +69,12 @@ module "list"
     div(class="container-fluid p-0")
     {
         #! do uie.printV12FormBar(nav_config)
-
+        #$
+        div(class="ps-2 pe-2")
+        {
+            h5{"#<@@(cliente,'$nombre')>"}
+        }
+        
         #$ div(id="work_area" class="container-section p-2")
         {$""
             form(action="#<preserveQSParams('./')>" method="GET" id="form_search" class="no-print my-1 d-flex py-1")
@@ -75,7 +82,7 @@ module "list"
                 "filter-text"(
                     "id"="ft_search"
                     "text-field"="s"
-                    "placeholder"="Buscar por nombre, correo o teléfono"
+                    "placeholder"="Buscar datos..."
                     "form"="#form_search"
                     "value"="#<@@(@@(@crud_context,'&http/request/get'),'$s')>"
                     "auto-submit"="true"
