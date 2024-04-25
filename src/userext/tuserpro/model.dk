@@ -164,7 +164,7 @@ module "model"
     {
         sql = "
             SELECT
-                up.sys_pk, up.email, up.mobile, u.username
+                up.sys_pk, up.email, up.mobile, u.username,u.sys_pk pkuser
             FROM tuserpro up
                 INNER JOIN tuser u ON up.ref_user = u.sys_pk
             WHERE IF(IFNULL(@s,'')='', true, (up.email LIKE CONCAT('%',@s,'%') OR up.mobile LIKE CONCAT('%',@s,'%') OR u.username LIKE CONCAT('%',@s,'%')))

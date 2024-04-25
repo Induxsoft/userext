@@ -57,7 +57,7 @@ module "form.dk"
                         <input-key 
                             id="usuario"
                             name="usuario"
-                            data-key="sys_pk"
+                            data-key="pkuser"
                             data-search="username"
                             data-text="email"
                             data-source="#<@USEREXT_TUSERPRO>?s=@search"
