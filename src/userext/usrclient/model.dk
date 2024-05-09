@@ -16,10 +16,10 @@ module "model"
     prepareView::&db,&params,&entity
     {
         params<"user">:@@(entity,"#usuario")
-        ref user=dbr.rec(db,"select tp.*,t.userid username 
+        ref user=dbr.rec(db,"select tp.*,t.sys_pk pkuser,t.userid username 
         from tuserpro  tp
         inner join tuser t on tp.ref_user=t.sys_pk 
-        where tp.sys_pk=@user",params)
+        where t.sys_pk=@user",params)
         
         using entity
         {

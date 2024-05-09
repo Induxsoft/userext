@@ -33,6 +33,7 @@ module "form.dk"
 
     ref user=ifnull(@("&./user"),record.create())
     
+    disabled=ifstr(isNew,"false","true")
     #$
     div(class="container")
     {   
