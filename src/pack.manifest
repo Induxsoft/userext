@@ -1,0 +1,6 @@
+{
+	"id":"userext",
+	"installable":["userext"],
+	"version":"1.0.17",
+	"schema_ver":"1.0.10"
+}
